@@ -1,4 +1,5 @@
 import torch;
+import numpy as np;
 import pandas as pd;
 
 def dataFrameStatus(df: pd.DataFrame) -> None:
@@ -25,23 +26,27 @@ def dataFrameStatus(df: pd.DataFrame) -> None:
 
 def batchAccuracy(preds: torch.Tensor, labels: torch.Tensor) -> float:
     """
-    Returns the average accuracy of each predicted sample compared to the labels.
+    Returns the average accuracy of each predicted sample compared to the labels,
+    based on how close the predicted price is to the actual price.
 
-    e.g:
-    predicted 5 -> actual 10,
-    returns 0.5
+    The accuracy is calculated as the percentage difference between the predicted 
+    and actual values, where a smaller difference results in higher accuracy.
 
     Args:
-    preds (torch.Tensor): Predicted values
-    labels (torch.Tensor): Actual labels
+    preds (torch.Tensor): Predicted prices
+    labels (torch.Tensor): Actual prices
 
     Returns:
-    float: Average accuracy
+    float: Average accuracy as a percentage of how close the predicted price is to the actual price
     """
 
-    # Ensure preds and labels are 1D tensors
+    # Ensure preds and labels are 1D tensors and move to CPU if necessary
     preds = preds.squeeze().detach().cpu().numpy()
     labels = labels.detach().cpu().numpy()
 
-    accuracy_mean: float = sum(preds == labels) / len(preds)
+    # Calculate the absolute percentage error between predicted and actual values
+    errors = np.abs(preds - labels) / np.abs(labels) * 100
+
+    # Compute the accuracy as 100% minus the average percentage error
+    accuracy_mean = 100 - np.mean(errors)
     return accuracy_mean
